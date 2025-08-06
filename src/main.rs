@@ -19,9 +19,15 @@ async fn main() {
     let mut message_timer = 0.0;
     let message_duration = 2.0;
 
+    // Drag state
+    let mut dragging_index: Option<usize> = None;
+    let mut drag_offset = vec2(0.0, 0.0);
+    let point_radius = 5.0;
+
     loop {
         clear_background(BLACK);
         let delta_time = get_frame_time();
+        let mouse_pos = vec2(mouse_position().0, mouse_position().1);
         if show_no_points_message {
             message_timer -= delta_time;
             if message_timer <= 0.0 {
@@ -29,8 +35,47 @@ async fn main() {
             }
         }
 
+        if is_mouse_button_pressed(MouseButton::Left) {
+            let mut clicked_point = false;
+            for (i, point) in points.iter().enumerate() {
+                let distance = (mouse_pos - *point).length();
+                if distance <= point_radius {
+                    dragging_index = Some(i);
+                    drag_offset = *point - mouse_pos;
+                    clicked_point = true;
+                    break;
+                }
+            }   
+            if !clicked_point {
+                points.push(mouse_pos);
+                if is_animating {
+                    current_curve.push(mouse_pos);
+                }
+            }
+        }
+
+        if is_mouse_button_down(MouseButton::Left) {
+            if let Some(index) = dragging_index {
+                points[index] = mouse_pos + drag_offset;
+                if points.len() >= 2 {
+                    if is_animating {
+                        current_curve = points.clone();
+                        for _ in 1..animation_step {
+                            current_curve = chaikin_subdivision(&current_curve);
+                        }
+                    } else {
+                        current_curve = points.clone();
+                    }
+                }
+            }
+        }
+
+        if is_mouse_button_released(MouseButton::Left) {
+            dragging_index = None;
+        }
+
         if is_animating {
-            animation_timer += get_frame_time();
+            animation_timer += delta_time;
             if animation_timer >= animation_delay {
                 animation_timer = 0.0;
                 animation_step += 1;
@@ -46,7 +91,7 @@ async fn main() {
         }
 
         draw_text(
-            "Click to add points, Enter to animate, Delete to clear, Escape to exit",
+            "Click to add points, drag to move, Enter to animate, Delete to clear, Escape to exit",
             10.0,
             20.0,
             20.0,
@@ -64,17 +109,16 @@ async fn main() {
         if show_no_points_message {
             draw_text("You forgot to draw any points?", 30.0, 70.0, 30.0, RED);
         }
-        if is_animating && !current_curve.is_empty() {
+
+        if !current_curve.is_empty() {
             draw_curve(&current_curve, if animation_step == 1 { WHITE } else { GREEN });
-            for point in &points {
-                draw_circle_lines(point.x, point.y, 3.0, 1.0, WHITE);
-            }
-        } else {
-            for point in &points {
-                draw_circle_lines(point.x, point.y, 3.0, 1.0, WHITE);
-            }
         }
-        draw_curve(&current_curve, if animation_step == 1 { WHITE } else { GREEN });
+
+        for point in points.iter() {          
+            draw_circle_lines(point.x, point.y, point_radius, 2.0, DARKGRAY);
+                  
+        }
+
         if is_key_pressed(KeyCode::Escape) {
             break;
         } else if is_key_pressed(KeyCode::Delete) {
@@ -83,6 +127,7 @@ async fn main() {
             animation_step = 1;
             animation_timer = 0.0;
             current_curve.clear();
+            dragging_index = None;
         } else if is_key_pressed(KeyCode::Enter) {
             if points.len() >= 2 {
                 if points.len() > 2 {
@@ -95,14 +140,6 @@ async fn main() {
                 show_no_points_message = true;
                 message_timer = message_duration;
             }
-        }
-        if is_mouse_button_pressed(MouseButton::Left) {
-            let (x, y) = mouse_position();
-            points.push(vec2(x, y));
-            if is_animating{
-                current_curve.push(vec2(x, y));
-            }
-
         }
 
         next_frame().await;
