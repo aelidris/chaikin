@@ -21,7 +21,7 @@ async fn main() {
 
     loop {
         clear_background(BLACK);
-        let delta_time = get_frame_time();   
+        let delta_time = get_frame_time();
         if show_no_points_message {
             message_timer -= delta_time;
             if message_timer <= 0.0 {
@@ -62,37 +62,19 @@ async fn main() {
             );
         }
         if show_no_points_message {
-            draw_text(
-                "You forgot to draw any points?",
-                30.0,
-                70.0,
-                30.0,
-                RED
-            );
+            draw_text("You forgot to draw any points?", 30.0, 70.0, 30.0, RED);
         }
         if is_animating && !current_curve.is_empty() {
             draw_curve(&current_curve, if animation_step == 1 { WHITE } else { GREEN });
             for point in &points {
-                draw_circle_lines(point.x, point.y, 3.0,1.0, WHITE);
+                draw_circle_lines(point.x, point.y, 3.0, 1.0, WHITE);
             }
         } else {
             for point in &points {
-                draw_circle_lines(point.x, point.y, 3.0,1.0, WHITE);
-            }
-            if points.len() >= 2 {
-                for i in 0..points.len() - 1 {
-                    draw_line(
-                        points[i].x,
-                        points[i].y,
-                        points[i + 1].x,
-                        points[i + 1].y,
-                        1.0,
-                        WHITE
-                    );
-                }
+                draw_circle_lines(point.x, point.y, 3.0, 1.0, WHITE);
             }
         }
-
+        draw_curve(&current_curve, if animation_step == 1 { WHITE } else { GREEN });
         if is_key_pressed(KeyCode::Escape) {
             break;
         } else if is_key_pressed(KeyCode::Delete) {
@@ -102,8 +84,10 @@ async fn main() {
             animation_timer = 0.0;
             current_curve.clear();
         } else if is_key_pressed(KeyCode::Enter) {
-            if points.len() > 2 {
-                is_animating = true;
+            if points.len() >= 2 {
+                if points.len() > 2 {
+                    is_animating = true;
+                }
                 animation_step = 1;
                 animation_timer = 0.0;
                 current_curve = points.clone();
@@ -115,13 +99,10 @@ async fn main() {
         if is_mouse_button_pressed(MouseButton::Left) {
             let (x, y) = mouse_position();
             points.push(vec2(x, y));
-            println!("Point added at: ({})", points.len());
-            // Stop animation when adding new points
-            if is_animating {
-                is_animating = false;
-                animation_step = 0;
-                animation_timer = 0.0;
+            if is_animating{
+                current_curve.push(vec2(x, y));
             }
+
         }
 
         next_frame().await;
@@ -129,7 +110,7 @@ async fn main() {
 }
 
 fn draw_curve(points: &[Vec2], color: Color) {
-    if points.len() > 2 {
+    if points.len() >= 2 {
         for i in 0..points.len() - 1 {
             draw_line(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y, 2.0, color);
         }
