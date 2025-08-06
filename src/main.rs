@@ -15,8 +15,20 @@ async fn main() {
     let max_steps = 7;
     let mut current_curve = Vec::new();
 
+    let mut show_no_points_message = false;
+    let mut message_timer = 0.0;
+    let message_duration = 2.0;
+
     loop {
         clear_background(BLACK);
+        let delta_time = get_frame_time();   
+        if show_no_points_message {
+            message_timer -= delta_time;
+            if message_timer <= 0.0 {
+                show_no_points_message = false;
+            }
+        }
+
         if is_animating {
             animation_timer += get_frame_time();
             if animation_timer >= animation_delay {
@@ -47,6 +59,15 @@ async fn main() {
                 45.0,
                 20.0,
                 YELLOW
+            );
+        }
+        if show_no_points_message {
+            draw_text(
+                "You forgot to draw any points?",
+                30.0,
+                70.0,
+                30.0,
+                RED
             );
         }
         if is_animating && !current_curve.is_empty() {
@@ -80,11 +101,16 @@ async fn main() {
             animation_step = 1;
             animation_timer = 0.0;
             current_curve.clear();
-        } else if is_key_pressed(KeyCode::Enter) && points.len() > 2 {
-            is_animating = true;
-            animation_step = 1;
-            animation_timer = 0.0;
-            current_curve = points.clone();
+        } else if is_key_pressed(KeyCode::Enter) {
+            if points.len() > 2 {
+                is_animating = true;
+                animation_step = 1;
+                animation_timer = 0.0;
+                current_curve = points.clone();
+            } else if points.len() == 0 {
+                show_no_points_message = true;
+                message_timer = message_duration;
+            }
         }
         if is_mouse_button_pressed(MouseButton::Left) {
             let (x, y) = mouse_position();
