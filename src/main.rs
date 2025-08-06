@@ -80,7 +80,7 @@ async fn main() {
             animation_step = 1;
             animation_timer = 0.0;
             current_curve.clear();
-        } else if is_key_pressed(KeyCode::Enter) && points.len() >= 2 {
+        } else if is_key_pressed(KeyCode::Enter) && points.len() > 2 {
             is_animating = true;
             animation_step = 1;
             animation_timer = 0.0;
@@ -103,10 +103,7 @@ async fn main() {
 }
 
 fn draw_curve(points: &[Vec2], color: Color) {
-    for point in points {
-        draw_circle(point.x, point.y, 2.0, color);
-    }
-    if points.len() >= 2 {
+    if points.len() > 2 {
         for i in 0..points.len() - 1 {
             draw_line(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y, 2.0, color);
         }
