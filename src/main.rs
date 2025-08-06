@@ -9,7 +9,7 @@ use macroquad::prelude::*;
 async fn main() {
     let mut points: Vec<Vec2> = Vec::new();
     let mut is_animating = false;
-    let mut animation_step = 0;
+    let mut animation_step = 1;
     let mut animation_timer = 0.0;
     let animation_delay = 0.5;
     let max_steps = 7;
@@ -23,9 +23,9 @@ async fn main() {
                 animation_timer = 0.0;
                 animation_step += 1;
                 if animation_step > max_steps {
-                    animation_step = 0;
+                    animation_step = 1;
                     current_curve = points.clone();
-                } else if animation_step == 0 {
+                } else if animation_step == 1 {
                     current_curve = points.clone();
                 } else {
                     current_curve = chaikin_subdivision(&current_curve);
@@ -50,13 +50,13 @@ async fn main() {
             );
         }
         if is_animating && !current_curve.is_empty() {
-            draw_curve(&current_curve, if animation_step == 0 { WHITE } else { GREEN });
+            draw_curve(&current_curve, if animation_step == 1 { WHITE } else { GREEN });
             for point in &points {
-                draw_circle(point.x, point.y, 2.0, GRAY);
+                draw_circle_lines(point.x, point.y, 3.0,1.0, WHITE);
             }
         } else {
             for point in &points {
-                draw_circle(point.x, point.y, 2.0, WHITE);
+                draw_circle_lines(point.x, point.y, 3.0,1.0, WHITE);
             }
             if points.len() >= 2 {
                 for i in 0..points.len() - 1 {
@@ -77,12 +77,12 @@ async fn main() {
         } else if is_key_pressed(KeyCode::Delete) {
             points.clear();
             is_animating = false;
-            animation_step = 0;
+            animation_step = 1;
             animation_timer = 0.0;
             current_curve.clear();
         } else if is_key_pressed(KeyCode::Enter) && points.len() >= 2 {
             is_animating = true;
-            animation_step = 0;
+            animation_step = 1;
             animation_timer = 0.0;
             current_curve = points.clone();
         }
