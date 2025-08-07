@@ -63,6 +63,8 @@ async fn main() {
                         for _ in 1..animation_step {
                             current_curve = chaikin_subdivision(&current_curve);
                         }
+                    } else {
+                        current_curve = points.clone();
                     }
                 }
             }
